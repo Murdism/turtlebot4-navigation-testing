@@ -1,0 +1,30 @@
+world_name: "warehouse"
+nav2: true
+rviz: true
+slam: false
+localization: true
+
+tests:
+  - test_name: "warehouse_center_to_corner"
+    start_x: 8.0
+    start_y: 7.0
+    start_z: 0.0
+    start_yaw: 0.0
+    goal_x: 1.0
+    goal_y: 1.0
+    goal_z: 0.0
+    goal_yaw: 1.57
+    repetitions: 1
+    dist_thres: 0.3
+
+  - test_name: "warehouse_corner_to_center"
+    start_x: 1.0
+    start_y: 1.0
+    start_z: 0.0
+    start_yaw: 1.57
+    goal_x: 8.0    
+    goal_y: 7.0
+    goal_z: 0.0
+    goal_yaw: 0.0
+    repetitions: 2
+    dist_thres: 0.3

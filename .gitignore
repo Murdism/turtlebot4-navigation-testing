@@ -1,5 +1,4 @@
 reports/
-*.*
 ros2_ws/src/nav2_performance_tests/nav2_performance_tests/__pycache__/
 ros2_ws/src/nav2_performance_tests/nav2_performance_tests/*.pyc
 ros2_ws/src/nav2_performance_tests/nav2_performance_tests/*.pyo
