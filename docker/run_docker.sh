@@ -5,8 +5,8 @@ set -e
 IMAGE_NAME=ros2_nav2_image
 CONTAINER_NAME=ros2_nav_container
 USER_NAME=tester
-REPO_DIR=nturtlebot4-navigation-testing
-
+REPO_DIR=turtlebot4-navigation-testing
+chmod -R u+rwX "$(pwd)"
 # Default GPU usage: auto-detect
 USE_GPU="auto"
 
