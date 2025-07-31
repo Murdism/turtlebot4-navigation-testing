@@ -134,9 +134,9 @@ For automated navigation testing using available maps (AMCL for localization):
 
 ```bash
 source install/setup.bash
-# Basic navigation test (depot world: 0,0 → 8,7)
+# Basic navigation test (depot world: 1,3 → 8,7)
 ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
-    start:="0.0,0.0" goal:="8.0,7.0"
+    start:="0.0,0.0" goal:="8.0,7.0"  repetitions:=2 dist_thres:=0.25
 ```
 
 **Notes**: 

@@ -724,6 +724,7 @@ class Nav2TestNode(Node):
         
         total_tests = len(tests)
         passed_tests = 0
+        failed_tests = 0
         
         for i, test in enumerate(tests, 1):
             test_name = test.get('test_name', f'test_{i}')
@@ -744,25 +745,33 @@ class Nav2TestNode(Node):
             self.get_logger().info(f"Route: ({start_x:.1f}, {start_y:.1f}) → ({goal_x:.1f}, {goal_y:.1f}) x{repetitions}")
             
             # Run this individual test
-            if self.execute_navigation_test(
+            n_success = self.execute_navigation_test(
                 start_x, start_y, start_z, start_yaw,
                 goal_x, goal_y, goal_z, goal_yaw,
                 test_name, threshold, repetitions, world_name, entity_name
-            ):
-                passed_tests += 1
+            )
+            # Update counts
+            passed_tests += n_success
+            total_tests = repetitions
+
+            # Conditional logging based on actual results
+            if n_success == repetitions:
                 self.get_logger().info(f"✅ Test {i} PASSED: {test_name}")
             else:
-                self.get_logger().error(f"❌ Test {i} FAILED: {test_name}")
+                self.get_logger().error(f"❌ Test {i} FAILED: {test_name} ({n_success}/{repetitions} successful)")
             
-            # Brief pause between tests
-            time.sleep(1)
         
+            time.sleep(1)
+
         # Summary
+        failed_tests = total_tests - passed_tests  # Calculate failed this way
         self.get_logger().info(f"=== Batch Test Summary ===")
         self.get_logger().info(f"Total tests: {total_tests}")
         self.get_logger().info(f"Passed: {passed_tests}")
-        self.get_logger().info(f"Failed: {total_tests - passed_tests}")
+        self.get_logger().info(f"Failed: {failed_tests}")
         self.get_logger().info(f"Success rate: {passed_tests/total_tests*100:.1f}%")
+                    
+
     
     def run_single_test_from_config(self, test_config):
         """Run single test from config file"""     
@@ -876,21 +885,6 @@ class Nav2TestNode(Node):
         - Saves summary report with all runs and metrics
         """
 
-        # # check if file exists
-        # start_x = self.get_parameter('start_x').value
-        # start_y = self.get_parameter('start_y').value
-        # start_z = self.get_parameter('start_z').value
-        # start_yaw = self.get_parameter('start_yaw').value
-        # goal_x = self.get_parameter('goal_x').value
-        # goal_y = self.get_parameter('goal_y').value
-        # goal_z = self.get_parameter('goal_z').value
-        # goal_yaw = self.get_parameter('goal_yaw').value
-        # test_name = self.get_parameter('test_name').value
-        # threshold = self.get_parameter('dist_thres').value
-        # repetitions = int(self.get_parameter('repetitions').value)
-        # world_name = self.get_parameter('world_name').value
-        # entity_name = self.get_parameter('entity_name').value
-
         world_name = self.get_world_name() 
 
         self.get_logger().info(f"🚀 Starting {repetitions} test iteration(s) for {test_name}")
@@ -942,6 +936,9 @@ class Nav2TestNode(Node):
                 time.sleep(1.0)
                 
         self.save_summary_report(test_name, repetitions)
+        n_success = sum(1 for r in self.run_results if r['test_status'] == 'PASS')
+        self.get_logger().info(f"🚀 Test {test_name} completed: {n_success} PASS")
+        return n_success 
 
 def make_pose(x, y, yaw, frame_id="map", z=0.0):
     """Pose creation utility function"""
