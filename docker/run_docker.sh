@@ -5,7 +5,7 @@ set -e
 IMAGE_NAME=ros2_nav2_image
 CONTAINER_NAME=ros2_nav_container
 USER_NAME=tester
-REPO_DIR=nav2-performance-testing
+REPO_DIR=nturtlebot4-navigation-testing
 
 # Default GPU usage: auto-detect
 USE_GPU="auto"

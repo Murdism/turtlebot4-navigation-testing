@@ -1,236 +1,387 @@
-# TurtleBot4 Navigation Testing Suite
-A comprehensive ROS 2 testing framework for evaluating TurtleBot4 navigation (Nav2) performance in Gazebo simulation environments. This suite provides automated navigation testing with detailed performance metrics, path analysis, and flexible parameter configuration.
+## 🎯 Project Overview
 
-## Overview
+This project is an advanced automated testing solution for autonomous robot navigation that validates TurtleBot4's ability to navigate from point A to point B using the Nav2 stack. The system captures comprehensive performance metrics through statistical analysis of repeated test runs, making it ideal for rigorous validation, regression testing, and performance benchmarking of navigation algorithms.
 
-This testing suite consists of three main components:
-1. **Launch File** - Configurable test orchestration
-2. **Nav2 Test Action Server** - Core navigation testing logic
-3. **Initial Pose Publisher** - AMCL pose initialization utility
+### Key Features
 
-## Features
+- **Containerized ROS 2 Environment**: Complete Docker setup with ROS 2 Jazzy Jellyfish
+- **Statistical Analysis via Repetitions**: Critical for reliable performance validation through multiple test runs
+- **Automated Navigation Testing**: Send navigation goals and validate robot performance  
+- **Comprehensive Performance Metrics**: Duration, success rate, path efficiency, deviation analysis, and recovery behaviors
+- **Path Trajectory Analysis**: Compare planned vs actual robot paths for navigation quality assessment
+- **Multiple Test Modes**: Single tests, batch testing, and repeated runs for statistical confidence
+- **Flexible Configuration**: Support for multiple worlds and test scenarios
 
-- **Flexible Parameter Input**: Support for both individual coordinates and comma-separated format
-- **Dynamic World/Map Selection**: Automatically matches world names with corresponding map files
-- **Comprehensive Test Reports**: YAML reports with detailed metrics and path analysis
-- **Multi-run Testing**: Support for repeated test execution with statistical analysis
-- **Robust State Management**: Proper robot teleportation, pose initialization, and Nav2 state handling
-- **Path Deviation Analysis**: Comparison between planned and actual robot trajectories
+## 🏗️ Architecture
 
-## Components
+### Core Components
 
-### 1. Launch File (`turtlebot4_nav_test.launch.py`)
+1. **Launch File** (`nav2_test_suite.launch.py`) - Orchestrates the entire test environment
+2. **Nav2 Test Node** (`Nav2TestNode`) - Core navigation testing engine with path tracking
+3. **AMCL Pose Initializer** (`amcl_pose_initializer`) - Reliable robot pose initialization
 
-The main orchestration component that:
-- Launches TurtleBot4 Gazebo simulation
-- Configures Nav2 stack with localization
-- Starts the navigation test action server
-- Handles dynamic parameter parsing
+### Test Flow
 
-### 2. Nav2 Test Action Server (`nav2_test_action_server.py`)
-
-Core testing engine that:
-- Manages robot teleportation in Gazebo
-- Handles AMCL pose initialization
-- Executes navigation goals with timeout handling
-- Collects performance metrics and path data
-- Generates detailed test reports
-
-### 3. Initial Pose Publisher (`initial_pose_publisher.py`)
-
-Utility for reliable AMCL initialization:
-- Publishes initial pose to AMCL
-- Waits for pose acceptance with covariance validation
-- Handles timeout scenarios gracefully
-
-## Parameters
-
-### Start Position Parameters
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `start_x` | 0.0 | Start X coordinate (meters) |
-| `start_y` | 0.0 | Start Y coordinate (meters) |
-| `start_z` | 0.0 | Start Z coordinate (meters) |
-| `start_yaw` | 0.0 | Start yaw orientation (radians) |
-
-### Goal Position Parameters
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `goal_x` | 2.0 | Goal X coordinate (meters) |
-| `goal_y` | 2.0 | Goal Y coordinate (meters) |
-| `goal_z` | 0.0 | Goal Z coordinate (meters) |
-| `goal_yaw` | 1.0 | Goal yaw orientation (radians) |
-
-### Combined Format Parameters (Alternative)
-| Parameter | Format | Description |
-|-----------|--------|-------------|
-| `start` | "x,y" or "x,y,z,yaw" | Combined start position |
-| `goal` | "x,y" or "x,y,z,yaw" | Combined goal position |
-
-### Test Configuration Parameters
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `dist_thres` | 0.30 | Distance threshold for goal completion (meters) |
-| `test_name` | test_01 | Test identifier for report naming |
-| `repetitions` | 1 | Number of test repetitions |
-| `world_name` | depot | Gazebo world environment |
-| `entity_name` | turtlebot4 | Robot entity name in Gazebo |
-
-
-
-📊 Data Source Selection & Rationale
-Reference Path: /plan Topic
-
-Source: Nav2 global planner output
-Rationale: Represents the intended navigation path as computed by the planning algorithm
-Industry Standard: This is the canonical reference for Nav2 performance analysis
-Benefits: Shows planning quality, path smoothness, and obstacle avoidance strategy
-
-Robot Path: /amcl_pose Topic
-
-Source: AMCL (Adaptive Monte Carlo Localization) pose estimates
-Rationale: Represents where the robot believes it is during navigation
-Industry Standard: Used in production systems for performance monitoring
-Benefits:
-
-Captures real-world localization uncertainty
-Works on both simulation and physical robots
-Reflects actual navigation system behavior
-Enables detection of both planning and localization issues
-## Usage Examples
-
-### Basic Navigation Test
-world options: depot, maze, warehouse
-```bash
-# Simple test with default depot world
-ros2 launch nav2_tests turtlebot4_nav_test.launch.py \
-    start:="0.0,0.0" goal:="3.0,2.0" 
+```
+1. Launch TurtleBot4 Gazebo Simulation + Nav2 Stack
+2. Teleport Robot to Start Position  
+3. Initialize AMCL Pose
+4. Send Navigation Goal
+5. Monitor Navigation Progress & Collect Metrics
+6. Generate Detailed Test Reports
+7. Repeat for Multiple Runs (Optional)
 ```
 
-### Custom World Environment
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Docker** (with NVIDIA Container Toolkit for GPU support)
+- **Git**
+- At least 8GB RAM and 4 CPU cores recommended
+
+### 1. Clone Repository
 
 ```bash
-# Test in warehouse environment
-ros2 launch nav2_tests turtlebot4_nav_test.launch.py \
-    world_name:=warehouse \
-    start:="1.0,1.0,0.0,0.0" goal:="8.0,5.0,0.0,1.57" \
-    test_name:=warehouse_test
+git clone https://github.com/Murdism/turtlebot4-navigation-testing.git
+cd turtlebot4-navigation-testing
 ```
 
+### 2. Build Docker Environment
+
+```bash
+# Make scripts executable
+chmod +x build_docker.sh run_docker.sh
+
+# Build the Docker image (includes ROS 2 Jazzy + TurtleBot4)
+./build_docker.sh
+```
+
+### 3. Run the Container
+
+```bash
+# Start the container with GUI support
+./run_docker.sh
+```
+
+### 4. Run Your First Test
+
+Inside the container:
+```
+colcon build
+source install/setup.bash
+cd /home/tester/turtlebot4-navigation-testing/
+```
+
+```bash
+# Basic navigation test (depot world: 0,0 → 3,2)
+ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
+    start:="0.0,0.0" goal:="3.0,2.0"
+
+# Check results
+ls reports/
+cat reports/test_01_summary.yaml
+```
+
+## 🧪 Testing Capabilities
+
+### Available Test Worlds
+
+- **depot** - Simple warehouse environment (default)
+- **warehouse** - Complex multi-room facility
+- **maze** - Challenging maze navigation
+
+### 🔺 Available Navigation Options
+
+You can run:
+
+Manual Teleop Tests: Manually control the robot using the keyboard or Gazebo GUI sliders
+
+Single Run Test: Start the robot from a fixed location and navigate to a goal once
+
+Repetitive Runs: Repeat the same test multiple times to analyze consistency, timing, and deviations
+
+Batch Tests: Run a YAML-defined suite of different start-goal navigation tests
+
+Sequential Live Runs: After a test completes, run another by specifying new start_x, goal_x, etc. without restarting Gazebo
+
+
+A complete ROS 2-based test automation framework to validate and evaluate TurtleBot4 navigation performance in Gazebo. Built for the Test Field Engineer Challenge, this solution supports manual and automated navigation testing, real-time metrics collection, and detailed YAML reports.
+
+✅ Designed to: Set up simulation, manually test robot motion, automate navigation A → B, and generate performance reports.
+
+```
+ℹ️ Launch File Input Options:
+
+All inputs below can be set via launch file or passed through ros2 launch:
+
+start: "x,y" or "x,y,z,yaw" (e.g., "1.0,2.0" or "1.0,2.0,0.0,1.57")
+
+goal: "x,y" or "x,y,z,yaw"
+
+start_x, start_y, start_z, start_yaw: Individual floats
+
+goal_x, goal_y, goal_z, goal_yaw: Individual floats
+
+dist_thres: Distance threshold (meters), default 0.30
+
+test_name: Custom name for test run
+
+repetitions: How many times to repeat the test
+
+world_name: World to launch (depot, warehouse, maze)
+
+entity_name: Robot name in Gazebo (default turtlebot4)
+
+test_file: Path to batch test YAML file
+```
+
+
+```
+ℹ️ Nav2TestNode Input Options
+
+All parameters below can be passed
+with:
+ros2 run nav2_performance_tests Nav2TestNode using --ros-args -p:
+
+start: "x,y" or "x,y,z,yaw" (e.g., "1.0,2.0" or "1.0,2.0,0.0,1.57")
+
+goal: "x,y" or "x,y,z,yaw"
+
+start_x, start_y, start_z, start_yaw: Start position (individual float values)
+
+goal_x, goal_y, goal_z, goal_yaw: Goal position (individual float values)
+
+dist_thres: Distance threshold in meters
+
+test_name: Name for the test run (e.g., test_repeat01)
+
+repetitions: Number of repetitions (default 1)
+
+world_name: World name for simulation context (used in report and logging)
+
+test_file: Optional path to a batch YAML file (used if running batch mode)
+
+entity_name: Name of the TurtleBot4 robot in Gazebo
+
+use_sim_time: Set to True when using simulation clock (default True)
+```
+### Single Navigation Test
+
+```bash
+# Simple point-to-point navigation
+ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
+    start:="0.0,0.0" goal:="4.0,3.0" \
+    test_name:=basic_nav_test
+```
+To run another test you do not need to restart:
+First open a new instance or using tmux a new termianl inside the container
+To open another docker termainl:
+```bash
+docker exec -it ros2_nav_container bash
+# inside the container run the following
+source install/setup.bash
+cd /home/tester/turtlebot4-navigation-testing/
+```
+
+use Nav2TestNode to send new start and goal points
+```
+bash
+ros2 run nav2_performance_tests Nav2TestNode.py --ros-args -p
+start:  "1.0,2.0" -p goal: "4.0,3.0" 
+```
 ### Multi-Run Performance Testing
 
 ```bash
-# Run 10 repetitions for statistical analysis
-ros2 launch nav2_tests turtlebot4_nav_test.launch.py \
+# Run 10 iterations for statistical analysis
+ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
     start:="0.5,0.5" goal:="4.5,3.5" \
     repetitions:=10 \
     test_name:=performance_analysis \
     dist_thres:=0.15
 ```
 
-### Individual Parameter Format
+### Different World Environments
 
 ```bash
-# Using individual coordinate parameters
-ros2 launch nav2_tests turtlebot4_nav_test.launch.py \
-    start_x:=1.0 start_y:=3.0 start_yaw:=0.785 \
-    goal_x:=5.0 goal_y:=3.0 goal_yaw:=0.0 \
-    world_name:='warehouse'  repetitions:=2
+# Test in warehouse environment
+ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
+    world_name:=warehouse \
+    start:="1.0,1.0,0.0,0.0" goal:="8.0,5.0,0.0,1.57" \
+    test_name:=warehouse_test
 ```
 
-### Precision Testing
+### Running Additional Tests (While Simulation Running)
 
 ```bash
-# High precision test with tight tolerance
-ros2 launch nav2_tests turtlebot4_nav_test.launch.py \
-    start:="2.0,1.0" goal:="6.0,4.0" \
-    dist_thres:=0.10 \
-    repetitions:=5 \
-    test_name:=precision_test
+# Run another test without restarting simulation
+ros2 run nav2_performance_tests Nav2TestNode \
+    --ros-args -p start_x:=2.0 -p goal_x:=6.0 -p test_name:="test2"
 ```
 
-## Test Reports
+## 📊 Performance Metrics & Data Collection Strategy
 
-The system generates two types of reports:
+### Why We Track Planned vs Actual Paths
 
-### Individual Run Reports (`{test_name}_run{N}_result.yaml`)
+**Planned Path (`/plan` topic)**:
+- **Source**: Nav2 global planner output showing the intended navigation route
+- **Purpose**: Represents optimal path computation considering obstacles and map constraints
+- **Analysis Value**: Reveals planning algorithm quality, path smoothness, and obstacle avoidance strategy
 
-Contains detailed metrics for each test run:
+**Actual Path (`/amcl_pose` topic)**:  
+- **Source**: AMCL localization estimates showing where the robot believes it traveled
+- **Purpose**: Captures real-world navigation performance including localization uncertainty
+- **Analysis Value**: Reflects actual system behavior, control accuracy, and localization quality
 
-```yaml
+This dual-path approach enables detection of both **planning issues** (suboptimal routes) and **execution issues** (poor path following), making it the industry standard for Nav2 performance evaluation.
+
+### Critical Role of Test Repetitions
+
+**Statistical Confidence**: Single test runs can be misleading due to:
+- Localization noise and uncertainty
+- Dynamic obstacle interactions  
+- Stochastic planning algorithms
+- Sensor noise and environmental variations
+
+**Use Cases Requiring Repetitions**:
+- **Regression Testing**: Ensure navigation performance doesn't degrade after code changes
+- **Performance Benchmarking**: Compare different navigation configurations statistically  
+- **Reliability Assessment**: Measure success rates under various conditions
+- **Algorithm Validation**: Validate new planners/controllers with statistical significance
+
+### Comprehensive Performance Metrics
+
+#### Navigation Success Metrics
+- **Test Status**: PASS/FAIL validation based on goal achievement within distance threshold
+- **Nav2 Status**: Detailed navigation stack result codes (SUCCEEDED, ABORTED, CANCELED, etc.)
+- **Success Rate**: Percentage of successful completions across multiple runs (critical for reliability)
+- **Recovery Behaviors**: Count of recovery attempts indicating navigation difficulty
+
+#### Timing & Performance Analysis  
+- **Navigation Duration**: Total time from goal submission to completion
+- **Statistical Analysis**: Mean, minimum, maximum, and standard deviation across repetitions
+- **Timeout Detection**: Identification of navigation failures due to time limits
+
+#### Path Quality & Efficiency Metrics
+- **Path Efficiency**: Ratio of optimal (straight-line) distance to actual path length
+- **Path Deviation**: Average distance between planned and actual trajectory points
+- **Path Length Analysis**: Comparison of planned vs actual distances traveled
+- **Trajectory Smoothness**: Assessment of path following accuracy and control quality
+
+#### Advanced Analysis
+- **Path Interpolation Matching**: For each planned waypoint, finds closest actual pose for precise deviation calculation
+- **Multi-Run Deviation Averaging**: Statistical path analysis across all successful test iterations
+- **Reference Path Extraction**: Captures complete planned and actual trajectories for visualization
+
+## 📈 Test Reports & Visualization Data
+
+The system generates detailed test reports in YAML format with complete trajectory data:
+### Individual Run Report (Complete Navigation Analysis)
 test_name: navigation_test_run1
 start: {x: 0.0, y: 0.0, z: 0.0}
 goal: {x: 3.0, y: 2.0, z: 0.0}
 test_status: PASS
 nav2_status: SUCCEEDED
-number_of_recoveries: 0
-remaining_distance: 0.12
 duration: 15.4
+path_metrics:
+  planned_length_m: 3.8
+  actual_length_m: 4.1
+  optimal_length_m: 3.6
+  actual_efficiency: 0.878
 planned_path: 
   - {x: 0.0, y: 0.0, z: 0.0}
   - {x: 1.5, y: 1.0, z: 0.0}
-  # ... full planned path
+  # ... complete planned path
 actual_path:
-  - {x: 0.0, y: 0.0, z: 0.0}
+  - {x: 0.0, y: 0.0, z: 0.0}  
   - {x: 1.4, y: 0.9, z: 0.0}
-  # ... full actual path
+  # ... complete actual path
 ```
 
-### Summary Reports (`{test_name}_summary.yaml`)
-
-Aggregated statistics across all runs:
-
+### Statistical Summary Report (Multi-Run Analysis)
 ```yaml
 test_name: navigation_test
-repetitions: 5
-average_time: 14.2
-min_time: 12.8
-max_time: 16.1
-success_rate: 1.0
-average_deviation: 0.08
-runs:
-  - test_name: navigation_test_run1
-    start: {x: 0.0, y: 0.0}
-    goal: {x: 3.0, y: 2.0}
-    status: PASS
-    duration: 15.4
-    detail_file: reports/navigation_test_run1_result.yaml
-  # ... additional runs
+test_configuration:
+  repetitions: 5
+  success_rate_percent: 100.0
+timing_statistics:
+  average_time_s: 14.2
+  min_time_s: 12.8
+  max_time_s: 16.1
+path_performance:
+  avg_actual_efficiency: 0.845
+  avg_path_deviation: 0.08
+reference_paths:
+  planned_path_full: [...]  # Complete reference paths
+  actual_path_full: [...]   # for visualization
 ```
 
-## Test Metrics
+## 🎮 Manual Robot Control
 
-### Performance Metrics
-- **Duration**: Total navigation time (seconds)
-- **Success Rate**: Percentage of successful completions
-- **Recovery Count**: Number of recovery behaviors triggered
-- **Remaining Distance**: Final distance to goal (meters)
+For manual testing and verification:
 
-### Path Analysis
-- **Average Deviation**: Mean distance between planned and actual path points
-- **Path Efficiency**: Comparison of planned vs actual path lengths
-- **Trajectory Smoothness**: Analysis of path following accuracy
+```bash
+# Launch just the simulation
+ros2 launch turtlebot4_gz_bringup turtlebot4_gz.launch.py
 
-## Architecture
+# In another terminal: Manual control
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true
+```
 
-### Test Flow
-1. **Initialization**: Launch Gazebo simulation and Nav2 stack
-2. **Robot Positioning**: Teleport robot to start position in Gazebo
-3. **Pose Setting**: Initialize AMCL with start pose
-4. **Navigation**: Send goal and monitor progress
-5. **Data Collection**: Record metrics, paths, and performance data
-6. **Reporting**: Generate detailed YAML reports
-7. **Repetition**: Repeat for multiple runs if specified
+## 🔧 Configuration Parameters
 
-### State Management
-- **Gazebo Teleportation**: Uses `gz service` for precise robot positioning
-- **AMCL Initialization**: Reliable pose setting with covariance validation
-- **Nav2 State Monitoring**: Ensures navigation stack readiness
-- **Costmap Clearing**: Fresh state between test runs
+### Position Parameters
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `start` | "0.0,0.0" | Start position "x,y" or "x,y,z,yaw" |
+| `goal` | "2.0,2.0" | Goal position "x,y" or "x,y,z,yaw" |
+| `start_x`, `start_y`, `start_yaw` | 0.0, 0.0, 0.0 | Individual coordinates |
+| `goal_x`, `goal_y`, `goal_yaw` | 2.0, 2.0, 1.0 | Individual coordinates |
 
-## Error Handling
+### Test Configuration
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `test_name` | test_01 | Test identifier for reports |
+| `repetitions` | 1 | Number of test iterations |
+| `dist_thres` | 0.30 | Goal completion distance (meters) |
+| `world_name` | depot | Gazebo world (depot/warehouse/maze) |
 
-### Common Issues and Solutions
+## 📈 Performance Metrics
+
+The testing suite captures comprehensive navigation performance data across all repetitions:
+
+### Success & Reliability Metrics
+- **Test Status**: PASS/FAIL based on goal achievement within distance threshold
+- **Nav2 Status**: Navigation stack result codes with detailed failure analysis
+- **Success Rate**: Critical reliability metric - percentage across multiple runs  
+- **Recovery Count**: Number of recovery behaviors indicating navigation complexity
+
+### Statistical Timing Analysis
+- **Navigation Duration**: Total time to complete each navigation task
+- **Multi-Run Statistics**: Mean, min, max, standard deviation for performance consistency
+- **Performance Trends**: Identify timing patterns across repetitions
+
+### Path Quality Assessment  
+- **Path Efficiency**: Actual path vs optimal straight-line distance ratio
+- **Path Deviation**: Average distance between planned and actual trajectories
+- **Path Length Comparison**: Planned vs actual distances for execution analysis
+- **Trajectory Smoothness**: Path following accuracy and control system performance
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Container won't start with GUI:**
+```bash
+# Ensure X11 forwarding is working
+xhost +local:docker
+```
+
+**Gazebo/RViz loading issues:**
+```bash
+# Close all instances and restart container
+# Sometimes takes 30s-1min to fully load - be patient
+```
 
 **Robot teleportation fails:**
 ```bash
@@ -238,132 +389,107 @@ runs:
 gz service -l | grep set_pose
 ```
 
-**AMCL pose not accepted:**
-- Verify map file exists and matches world
-- Check initial pose is within map bounds
-- Increase covariance threshold if needed
-
 **Navigation timeout:**
-- Increase distance threshold for complex environments
-- Verify goal position is reachable
-- Check for obstacles blocking path
+```bash
+# Increase distance threshold for complex environments
+# Verify goal position is reachable in RViz
+```
 
 ### Debug Commands
 
 ```bash
-# Monitor navigation topics
+# Monitor navigation progress
 ros2 topic echo /navigate_to_pose/_action/feedback
 
-# Check AMCL pose
+# Check robot localization
 ros2 topic echo /amcl_pose
 
-# Verify costmaps
-ros2 run nav2_costmap_2d nav2_costmap_2d_markers voxel_grid:=/local_costmap/voxel_grid visualization_marker:=/my_marker
+# View planned path
+ros2 topic echo /plan
 ```
 
-## Requirements
+## 🔬 Technical Implementation & Use Cases
 
-### System Dependencies
-- ROS 2 Jazzy
-- Gazebo Garden/Harmonic
-- Python 3.8+
+### Data Collection Strategy
 
-### ROS 2 Packages
-- `turtlebot4_gz_bringup` - TurtleBot4 Gazebo simulation
-- `turtlebot4_navigation` - Navigation maps and configurations
-- `nav2_msgs` - Navigation action interfaces
-- `geometry_msgs` - Pose and geometry messages
-- `lifecycle_msgs` - Node lifecycle management
+**Industry-Standard Approach**: 
+- **Reference Path**: `/plan` topic captures Nav2 global planner intentions
+- **Robot Path**: `/amcl_pose` topic tracks actual localization-based movement
+- **Real-time Metrics**: Nav2 action feedback provides duration, recoveries, and completion status
 
-### Python Dependencies
-```bash
-pip install PyYAML
+### Primary Use Cases
+
+**🔄 Continuous Integration Testing**:
+- Automated regression testing after navigation stack updates
+- Statistical validation with 10+ repetitions for reliable CI/CD pipelines
+
+**⚡ Performance Benchmarking**:
+- Compare different planner configurations (DWB, TEB, etc.)
+- Evaluate navigation performance across various environment complexities
+
+**🎯 Algorithm Validation**:
+- Validate new navigation algorithms with statistical significance
+- A/B testing of navigation parameter tunings
+
+**🏭 Production Readiness Assessment**:
+- Reliability testing with hundreds of repetitions
+- Success rate validation for deployment decisions
+
+### Auto-World Detection
+
+The system can automatically detect the active Gazebo world or use specified world parameters, enabling seamless integration with existing simulation environments.
+
+### Path Deviation Analysis Algorithm
+
+## 📁 Repository Structure
+
+```
+turtlebot4-navigation-testing/
+├── Dockerfile                 # ROS 2 Jazzy + TurtleBot4 environment
+├── build_docker.sh           # Docker build script  
+├── run_docker.sh             # Container launch script
+├── src/nav2_performance_tests/
+│   ├── launch/
+│   │   └── nav2_test_suite.launch.py
+│   ├── nav2_performance_tests/
+│   │   ├── nav2_test_node.py
+│   │   └── amcl_pose_initializer.py
+│   └── setup.py
+├── reports/                   # Generated test reports
+└── README.md                 # This file
 ```
 
-## Installation
+## 🎯 Challenge Requirements Fulfilled
 
-1. **Clone the repository:**
-```bash
-cd ~/ros2_ws/src
-git clone <repository_url> nav2_tests
-```
+✅ **Dockerfile with ROS 2 Jazzy** - Complete development environment on Ubuntu 24.04  
+✅ **Build/Run Scripts** - `build_docker.sh` and `run_docker.sh`  
+✅ **Robot Simulation** - TurtleBot4 in Gazebo with multiple worlds  
+✅ **Teleoperation Interface** - Keyboard control integration  
+✅ **Automated Navigation Test** - Point A to B navigation with success validation  
+✅ **Comprehensive Reports** - YAML reports with planned vs actual paths  
+✅ **Path Visualization Data** - Complete trajectory data for analysis  
 
-2. **Build the package:**
-```bash
-cd ~/ros2_ws
-colcon build --packages-select nav2_tests
-source install/setup.bash
-```
+## 🚀 Advanced Usage
 
-3. **Verify TurtleBot4 packages:**
-```bash
-ros2 pkg list | grep turtlebot4
-```
-
-## Advanced Usage
-
-### Custom World Creation
-
-1. Create world file in `turtlebot4_gz_bringup/worlds/`
-2. Create corresponding map file in `turtlebot4_navigation/maps/`
-3. Use `world_name` parameter to specify custom world
-
-### Test Automation
-
-```python
-# Example test suite script
-test_configs = [
-    {"start": "0,0", "goal": "3,2", "world": "depot"},
-    {"start": "1,1", "goal": "5,4", "world": "warehouse"},
-    {"start": "2,0", "goal": "4,3", "world": "office"}
-]
-
-for config in test_configs:
-    subprocess.run([
-        "ros2", "launch", "nav2_tests", "turtlebot4_nav_test.launch.py",
-        f"start:={config['start']}", 
-        f"goal:={config['goal']}",
-        f"world_name:={config['world']}",
-        "repetitions:=5"
-    ])
-```
-
-### Performance Benchmarking
-
-For systematic performance evaluation:
+### Batch Testing
+Create custom test configurations with multiple navigation scenarios:
 
 ```bash
-# Create benchmark script
-#!/bin/bash
-WORLDS=("depot" "warehouse" "office")
-DISTANCES=("short:1,1,3,2" "medium:0,0,5,4" "long:0,0,8,6")
-
-for world in "${WORLDS[@]}"; do
-    for dist in "${DISTANCES[@]}"; do
-        IFS=':' read -r name coords <<< "$dist"
-        ros2 launch nav2_tests turtlebot4_nav_test.launch.py \
-            world_name:=$world \
-            start:="0,0" goal:="$coords" \
-            test_name:="${world}_${name}" \
-            repetitions:=10
-    done
-done
+# Example: Run comprehensive warehouse testing
+ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
+    world_name:=warehouse \
+    test_file:=config/warehouse_test_suite.yaml
 ```
 
-## Troubleshooting
+## 📞 Support
 
-### Launch Issues
-- Ensure all TurtleBot4 packages are properly installed
-- Verify Gazebo and ROS 2 versions compatibility
-- Check that required topics and services are available
+If you encounter issues:
 
-### Test Failures
-- Review generated YAML reports for detailed error information
-- Monitor ROS 2 logs during test execution
-- Verify map and world file consistency
+1. Check the troubleshooting section above
+2. Review generated log files in the reports directory  
+3. Ensure Docker has sufficient resources allocated
+4. Verify all prerequisites are properly installed
 
-### Performance Issues
-- Reduce repetitions for initial testing
-- Use smaller distance thresholds for precision requirements
-- Consider environment complexity when setting timeouts
+---
 
+**Built with ROS 2 Jazzy Jellyfish 🤖 | TurtleBot4 🐢 | Nav2 🧭**

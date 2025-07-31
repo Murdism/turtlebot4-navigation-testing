@@ -59,7 +59,7 @@ ENV PATH=/opt/ros/${ROS_DISTRO}/bin:${PATH}
 ARG USERNAME=tester
 ARG USER_UID=1050
 ARG USER_GID=1050
-ARG REPO_DIR=nav2-performance-testing
+ARG REPO_DIR=turtlebot4-navigation-testing
 
 RUN groupadd --gid $USER_GID $USERNAME \
  && useradd -m -s /bin/bash --uid $USER_UID --gid $USER_GID $USERNAME \
