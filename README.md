@@ -49,6 +49,15 @@ cd turtlebot4-navigation-testing
 
 ### 2. Build Docker Environment
 
+#### Requirements to use Docker with GPU
+```bash
+sudo apt update
+sudo apt install -y nvidia-container-toolkit
+sudo systemctl restart docker
+```
+
+
+
 ```bash
 # Make scripts executable
 chmod +x build_docker.sh run_docker.sh
@@ -67,12 +76,24 @@ chmod +x build_docker.sh run_docker.sh
 ### 4. Run Your First Test
 
 Inside the container:
-```
+```bash
 colcon build
 source install/setup.bash
 cd /home/tester/turtlebot4-navigation-testing/
 ```
 
+#### Basic Sim test
+
+```bash
+ros2 launch turtlebot4_gz_bringup turtlebot4_gz.launch.py 
+
+```
+#### teleop_twist_keyboard
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true
+```
+
+#### Basic navigation test 
 ```bash
 # Basic navigation test (depot world: 0,0 → 3,2)
 ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
