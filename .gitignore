@@ -1,2 +1,15 @@
 reports/
 *.*
+ros2_ws/src/nav2_performance_tests/nav2_performance_tests/__pycache__/
+ros2_ws/src/nav2_performance_tests/nav2_performance_tests/*.pyc
+ros2_ws/src/nav2_performance_tests/nav2_performance_tests/*.pyo
+ros2_ws/src/nav2_performance_tests/nav2_performance_tests/*.pyd
+ros2_ws/src/nav2_performance_tests/nav2_performance_tests/*.so
+ros2_ws/src/nav2_performance_tests/nav2_performance_tests/*.egg-info/
+ros2_ws/src/nav2_performance_tests/nav2_performance_tests/*.egg
+ros2_ws/src/nav2_performance_tests/nav2_performance_tests/*.dist-info/
+ros2_ws/src/nav2_performance_tests/nav2_performance_tests/*.log
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+temp.txt

@@ -16,7 +16,7 @@ fi
 echo "Building ROS 2 Jazzy Docker image: $IMAGE_NAME"
 echo "Using Dockerfile: $DOCKERFILE_PATH"
 
-docker build -t "$IMAGE_NAME" -f "$DOCKERFILE_PATH" "$SCRIPT_DIR/.."
+docker build -t "$IMAGE_NAME" -f "$DOCKERFILE_PATH" "$SCRIPT_DIR/.." 
 
 # Check if build was successful
 if [ $? -eq 0 ]; then
