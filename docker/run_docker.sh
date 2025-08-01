@@ -94,7 +94,7 @@ else
         exit 1
     fi
 
-    # Run the container (remove user mapping to avoid permission issues)
+    # Run the container 
     docker run -it --rm \
         $GPU_FLAG \
         --name "$CONTAINER_NAME" \

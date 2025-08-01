@@ -725,6 +725,8 @@ class Nav2TestNode(Node):
         total_tests = len(tests)
         passed_tests = 0
         failed_tests = 0
+        total_test_iters = 0
+        sucessful_tests = 0 # number of tests with all repetitions as sucess
         
         for i, test in enumerate(tests, 1):
             test_name = test.get('test_name', f'test_{i}')
@@ -752,11 +754,12 @@ class Nav2TestNode(Node):
             )
             # Update counts
             passed_tests += n_success
-            total_tests = repetitions
+            total_test_iters += repetitions
 
             # Conditional logging based on actual results
             if n_success == repetitions:
                 self.get_logger().info(f"✅ Test {i} PASSED: {test_name}")
+                sucessful_tests+=1
             else:
                 self.get_logger().error(f"❌ Test {i} FAILED: {test_name} ({n_success}/{repetitions} successful)")
             
@@ -767,9 +770,12 @@ class Nav2TestNode(Node):
         failed_tests = total_tests - passed_tests  # Calculate failed this way
         self.get_logger().info(f"=== Batch Test Summary ===")
         self.get_logger().info(f"Total tests: {total_tests}")
+        self.get_logger().info(f"Total tests iterations: {total_test_iters}")
         self.get_logger().info(f"Passed: {passed_tests}")
         self.get_logger().info(f"Failed: {failed_tests}")
-        self.get_logger().info(f"Success rate: {passed_tests/total_tests*100:.1f}%")
+        self.get_logger().info(f"Success rate: {passed_tests/total_test_iters*100:.1f}%")
+        self.get_logger().info(f"Fully passed tests rate: {sucessful_tests}/{total_tests}")
+        
                     
 
     
