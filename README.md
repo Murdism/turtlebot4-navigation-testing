@@ -226,7 +226,7 @@ pkill -f ros2
 ```
 
 **When to use cleanup:**
-- Between test sessions
+- Between test sessions (if relaunched)
 - After interrupted or failed launches
 - When seeing TF_OLD_DATA or RTPS_TRANSPORT_SHM errors
 - Before running different world environments
