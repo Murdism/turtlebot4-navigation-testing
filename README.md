@@ -1,4 +1,4 @@
-# 🚀 TurtleBot4 Navigation Testing Suite
+# 🐢 TurtleBot4 Navigation Testing Suite
 ![Navigation Test Demo](demo/Simple_scnario.gif)
 
 📹 **[Complete Demo Video Collection](https://drive.google.com/drive/folders/1-TDA9TRJ-gcsTLjjDPdYjRyHc5yL2MIe?usp=drive_link)**
@@ -37,16 +37,17 @@ This project is an advanced automated testing solution for autonomous robot navi
 7. Repeat for Multiple Runs (Optional)
 ```
 
-## 🚀 Quick Start
+## 🐢 Quick Start
 
 ### 📹 See It In Action First
-Before diving into setup, check out the [live demonstration videos](https://drive.google.com/drive/folders/1-TDA9TRJ-gcsTLjjDPdYjRyHc5yL2MIe?usp=drive_link) showing the complete navigation testing suite in operation.
+Before diving into setup, check out our [live demonstration videos](https://drive.google.com/drive/folders/1-TDA9TRJ-gcsTLjjDPdYjRyHc5yL2MIe?usp=drive_link) showing the complete navigation testing suite in operation.
 
 *Featuring: Single navigation tests, multi-run analysis, batch testing, path efficiency analysis, and automated reporting*
 
 ### Prerequisites
 
 - **Docker** (with NVIDIA Container Toolkit for GPU support)
+- **Git**
 - **Network connection** - Required for downloading Gazebo worlds and ROS packages
 - **System Requirements**: At least 8GB RAM and 4 CPU cores recommended
 - **Display**: X11 forwarding capability for GUI applications (RViz, Gazebo)
@@ -110,7 +111,7 @@ source install/setup.bash
 
 Inside the container:
 ```bash
-colcon build 
+colcon build --symlink-install
 source install/setup.bash
 ```
 
@@ -182,7 +183,7 @@ ros2 launch nav2_performance_tests nav2_test_suite.launch.py start:="0.0,0.0" go
 ```
 
 **Notes**: 
-- First-time loading might take 1min or more - be patient
+- First-time loading might take 30s-1min - be patient
 - If RViz doesn't load the map, close all instances and restart
 - Check results: `ls reports/` and `cat reports/test_01_summary.yaml`
 
@@ -220,7 +221,7 @@ ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
 
 ### Sequential Testing (Without Restarting Simulation)
 
-After your initial test is running, open a new terminal and run additional tests:
+After running your initial test via the launch file, you can run additional tests using just the node without restarting the entire simulation environment:
 
 ```bash
 # Open new container terminal
@@ -269,65 +270,16 @@ ros2 run nav2_performance_tests Nav2TestNode --ros-args \
   -p repetitions:=3
 ```
 
-## 🔬 Advanced Testing Scenarios
-
-### Single Navigation Test
-
-```bash
-# Simple point-to-point navigation
-ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
-    start:="0.0,0.0" goal:="4.0,3.0" \
-    test_name:=basic_nav_test
-```
-
-### Multi-Run Performance Testing
-
-```bash
-# Run 5 iterations for statistical analysis
-ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
-    start:="0.5,0.5" goal:="4.5,3.5" \
-    repetitions:=5 \
-    test_name:=performance_analysis \
-    dist_thres:=0.15
-```
-
-### Different World Environments
-
-```bash
-# Test in warehouse environment
-ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
-    world_name:=warehouse \
-    start:="1.0,1.0,0.0,0.0" goal:="8.0,5.0,0.0,1.57" \
-    test_name:=warehouse_test
-```
-
-### Sequential Testing (Without Restarting Simulation)
-
-After your initial test is running, open a new terminal and run additional tests:
-
-```bash
-# Open new container terminal
-docker exec -it ros2_nav2_container bash
-source install/setup.bash
-
-# Run another test without restarting simulation
-ros2 run nav2_performance_tests Nav2TestNode --ros-args \
-  -p start_x:=2.0 \
-  -p start_y:=1.0 \
-  -p goal_x:=6.0 \
-  -p goal_y:=4.0 \
-  -p test_name:=sequential_test_2
-```
-## 🚀 Advanced Usage
+## 🐢 Advanced Usage
 
 ### Batch Testing
 Create custom test configurations with multiple navigation scenarios:
 
 ```bash
 # Example: Run comprehensive warehouse testing
-ros2 launch nav2_performance_tests       nav2_test_suite.launch.py \
-world_name:=warehouse \
-test_file:=config/warehouse_test_suite.yaml
+ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
+    world_name:=warehouse \
+    test_file:=config/warehouse_test_suite.yaml
 ```
 
 ### Custom Test Configuration Files
@@ -601,6 +553,40 @@ turtlebot4-navigation-testing/
 ### 📹 Live Proof of Implementation
 All features demonstrated in action: **[Video Collection](https://drive.google.com/drive/folders/1-TDA9TRJ-gcsTLjjDPdYjRyHc5yL2MIe?usp=drive_link)**
 
+## 🐢 Advanced Usage
+
+### Batch Testing
+Create custom test configurations with multiple navigation scenarios:
+
+```bash
+# Example: Run comprehensive warehouse testing
+ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
+    world_name:=warehouse \
+    test_file:=config/warehouse_test_suite.yaml
+```
+
+### Custom Test Configuration Files
+Create YAML files for complex test suites:
+
+```yaml
+# Example: config/warehouse_tests.yaml
+world_name: warehouse
+entity_name: turtlebot4
+tests:
+  - test_name: "short_path"
+    start_x: 1.0
+    start_y: 1.0
+    goal_x: 3.0
+    goal_y: 2.0
+    repetitions: 3
+  - test_name: "long_path"
+    start_x: 0.0
+    start_y: 0.0
+    goal_x: 8.0
+    goal_y: 6.0
+    repetitions: 5
+    dist_thres: 0.2
+```
 
 ## 📞 Support
 
