@@ -185,7 +185,7 @@ ros2 launch nav2_performance_tests nav2_test_suite.launch.py start:="0.0,0.0" go
 **Notes**: 
 - First-time loading might take 30s-1min - be patient
 - If RViz doesn't load the map, close all instances and restart
-- Check results: `ls reports/` and `cat reports/test_01_summary.yaml`
+- - Check results: `ls reports/` and `cat reports/test_01_summary.yaml` (reports generated in current directory)
 
 ## 🔬 Advanced Testing Scenarios
 
@@ -536,7 +536,7 @@ turtlebot4-navigation-testing/
 │       │   ├── nav2_test_node.py
 │       │   └── amcl_pose_initializer.py
 │       └── setup.py
-├── reports/                     # Generated test reports (auto-created)
+├── reports/                     # Generated test reports (auto-created in working directory)
 └── README.md                    # This documentation
 ```
 
@@ -593,7 +593,7 @@ tests:
 If you encounter issues:
 
 1. **Check the troubleshooting section** above for common solutions
-2. **Review generated log files** in the reports directory  
+2. 2. **Review generated log files** in the reports directory (created in your current working directory)
 3. **Ensure Docker has sufficient resources** allocated (8GB+ RAM recommended)
 4. **Verify all prerequisites** are properly installed
 5. **Check container logs**: `docker logs ros2_nav2_container`
