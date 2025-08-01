@@ -72,6 +72,6 @@ RUN mkdir -p /home/$USERNAME/REPO_DIR/
 WORKDIR /home/$USERNAME/$REPO_DIR/ros2_ws
 
 RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /home/$USERNAME/.bashrc \
- && echo "if [ -f /home/$USERNAME/$REPO_DIR/ros2_ws/install/setup.bash ]; then source /home/tester/$REPO_DIR/ros2_ws/install/setup.bash; fi" >> /home/tester/.bashrc \
- && echo "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" >> /home/tester/.bashrc
+ && echo "if [ -f /home/$USERNAME/$REPO_DIR/ros2_ws/install/setup.bash ]; then source /home/$USERNAME/$REPO_DIR/ros2_ws/install/setup.bash; fi" >> /home/$USERNAME/.bashrc \
+ && echo "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" >> /home/$USERNAME/.bashrc
 

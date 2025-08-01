@@ -13,6 +13,7 @@ import subprocess
 import math
 from datetime import datetime
 import re
+from .navigation_test_error_handler import NavigationTestErrorHandler
 
 class Nav2TestNode(Node):
     STATUS_CODE_TO_STRING = {
@@ -22,6 +23,7 @@ class Nav2TestNode(Node):
 
     def __init__(self):
         super().__init__('Nav2TestNode')
+        self.error_handler = NavigationTestErrorHandler(self)
         # Parameters for start/goal poses, thresholds, repetitions, etc.
         self.declare_parameter('start_x', 0.0)
         self.declare_parameter('start_y', 0.0)
@@ -154,7 +156,7 @@ class Nav2TestNode(Node):
 
     def wait_for_gz_service(self, world_name, timeout=120):
         srv_name = f"/world/{world_name}/set_pose"
-        self.get_logger().info(f"Waiting for gz service {srv_name} to be available...")
+        self.get_logger().info(f"⏳ Waiting for gz service {srv_name} to be available to start test...")
         start = time.time()
         while True:
             try:
@@ -170,7 +172,6 @@ class Nav2TestNode(Node):
             time.sleep(0.5)
 
     def teleport_robot(self, world_name, entity_name, x, y, z, yaw):
-        self.wait_for_gz_service(world_name)
         qw = math.cos(yaw / 2.0)
         qx = 0.0
         qy = 0.0
@@ -290,12 +291,16 @@ class Nav2TestNode(Node):
         ]
         
         try:
-            subprocess.run(cmd, check=True, timeout=10)
+            subprocess.run(cmd, check=True, timeout=120)
             self.get_logger().info("Initial pose publisher completed")
+            return True    
         except subprocess.TimeoutExpired:
-            self.get_logger().warn("Initial pose publisher timed out")
+            self.error_handler.display_setup_failure_message("TIMEOUT", "AMCL pose initialization timed out")
+            return False
         except subprocess.CalledProcessError as e:
-            self.get_logger().error(f"Initial pose publisher failed: {e}")
+            self.error_handler.display_setup_failure_message("PROCESS_ERROR", f"amcl_pose_initializer failed: {e}")
+            return False
+
         
         # Wait for pose to actually update
         self.wait_for_pose_update(x, y, timeout=10.0)
@@ -448,20 +453,41 @@ class Nav2TestNode(Node):
         
         self.get_logger().info(f"Sending goal: ({goal_pose.pose.position.x:.2f}, {goal_pose.pose.position.y:.2f})")
         
-        # Wait for server and send goal
-        if not self.nav_action_client.wait_for_server(timeout_sec=10.0):
-            self.get_logger().error("Navigation action server not available!")
-            return None, 0.0
+
+        num_trials = 3  # try 3 times to setup the goal
+        goal_handle = None
+
+        for attempt in range(num_trials):
+            self.get_logger().info(f"Goal attempt {attempt + 1}/{num_trials}")
             
-        future = self.nav_action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
-        rclpy.spin_until_future_complete(self, future)
-        
-        goal_handle = future.result()
-        if not goal_handle.accepted:
-            self.get_logger().error("Goal was rejected!")
-            return None, 0.0
+            # Wait for server and send goal
+            if not self.nav_action_client.wait_for_server(timeout_sec=30.0):
+                self.get_logger().error("Navigation action server not available!")
+                if attempt == num_trials - 1:  # Last attempt
+                    self.error_handler.display_setup_failure_message("NAV2_NOT_READY", "Navigation action server not available after 3 attempts")
+                    return None, 0.0
+                continue
+                
+            future = self.nav_action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
+            rclpy.spin_until_future_complete(self, future)
             
-        self.get_logger().info("Goal accepted, waiting for result...")
+            goal_handle = future.result()
+            
+            if goal_handle.accepted:
+                self.get_logger().info(f"Goal accepted on attempt {attempt + 1}")
+                break
+            else:
+                self.get_logger().warn(f"Goal was rejected on attempt {attempt + 1}")
+                if attempt < num_trials - 1:  # Not the last attempt
+                    self.get_logger().info("Retrying goal submission...")
+                    time.sleep(1.0)  # Wait before retry
+                else:  # Last attempt failed
+                    self.get_logger().error("Goal was rejected after all attempts!")
+                    self.error_handler.display_setup_failure_message("NAV2_NOT_READY", f"Navigation goal rejected after {num_trials} attempts")
+                    return None, 0.0
+
+        # Continue with accepted goal
+        self.get_logger().info("Goal accepted, waiting for result...")           
         
         # Wait for result
         result_future = goal_handle.get_result_async()
@@ -469,7 +495,6 @@ class Nav2TestNode(Node):
         
         result = result_future.result().result
         status_code = result_future.result().status
-        # duration = (self.get_clock().now() - self._start_time).nanoseconds / 1e9
         
         # Process feedback
         if self._feedback_data:
@@ -767,12 +792,12 @@ class Nav2TestNode(Node):
             time.sleep(1)
 
         # Summary
-        failed_tests = total_tests - passed_tests  # Calculate failed this way
+        failed_tests = total_test_iters - passed_tests  # Calculate failed test (overall)
         self.get_logger().info(f"=== Batch Test Summary ===")
         self.get_logger().info(f"Total tests: {total_tests}")
         self.get_logger().info(f"Total tests iterations: {total_test_iters}")
-        self.get_logger().info(f"Passed: {passed_tests}")
-        self.get_logger().info(f"Failed: {failed_tests}")
+        self.get_logger().info(f"Overall Passed: {passed_tests}")
+        self.get_logger().info(f"OVerall Failed: {failed_tests}")
         self.get_logger().info(f"Success rate: {passed_tests/total_test_iters*100:.1f}%")
         self.get_logger().info(f"Fully passed tests rate: {sucessful_tests}/{total_tests}")
         
@@ -805,8 +830,7 @@ class Nav2TestNode(Node):
         )
 
     def run_single_test_from_parameters(self):
-        """Run single test using ROS parameters"""
-        
+        """Run single test using ROS parameters"""  
         start_x = self.get_parameter('start_x').value
         start_y = self.get_parameter('start_y').value
         start_z = self.get_parameter('start_z').value
@@ -892,28 +916,29 @@ class Nav2TestNode(Node):
         """
 
         world_name = self.get_world_name() 
+        self.wait_for_gz_service(world_name)
 
-        self.get_logger().info(f"🚀 Starting {repetitions} test iteration(s) for {test_name}")
-        self.get_logger().info(f"📍 Route: ({start_x:.2f}, {start_y:.2f}) → ({goal_x:.2f}, {goal_y:.2f})")
+        self.get_logger().info(f"Starting {repetitions} test iteration(s) for {test_name}")
+        self.get_logger().info(f"Route: ({start_x:.2f}, {start_y:.2f}) → ({goal_x:.2f}, {goal_y:.2f})")
 
         for i in range(repetitions):
-            self.get_logger().info(f"🚀 Starting test iteration {i+1}/{repetitions} ------")
-            
-            # Clear any existing goals and costmaps
-            self.cancel_all_goals()
-            self.clear_costmaps()
-            
+            self.get_logger().info(f"Starting test iteration {i+1}/{repetitions} ------")
+             
             # Teleport robot in simulation
             success = self.teleport_robot(world_name, entity_name, start_x, start_y, start_z, start_yaw)
             if not success:
                 self.get_logger().error(f"Failed to teleport robot for run {i+1}")
-                continue
+                self.error_handler.display_setup_failure_message('GAZEBO_NOT_READY',"Failed to teleport robot for run {i+1}")
                 
             # Wait a moment for physics to settle
             time.sleep(2.0)
             
             # Set initial pose (AMCL) and wait for update
             self.set_initial_pose(start_x, start_y, start_z, start_yaw)
+            
+            # Clear any existing goals and costmaps
+            self.cancel_all_goals()
+            self.clear_costmaps()
             
             # Wait for Nav2 to be ready
             self.wait_for_nav2_active()
@@ -943,7 +968,9 @@ class Nav2TestNode(Node):
                 
         self.save_summary_report(test_name, repetitions)
         n_success = sum(1 for r in self.run_results if r['test_status'] == 'PASS')
-        self.get_logger().info(f"🚀 Test {test_name} completed: {n_success} PASS")
+        self.get_logger().info(f"Test {test_name} completed: {n_success} PASS")
+        self.run_results = []  # Reset for next test [batch case]
+        self.run_durations = []
         return n_success 
 
 def make_pose(x, y, yaw, frame_id="map", z=0.0):

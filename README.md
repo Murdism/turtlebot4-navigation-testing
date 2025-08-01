@@ -1,7 +1,8 @@
 # 🐢 TurtleBot4 Navigation Testing Suite
-![Navigation Test Demo](demo/Simple_scnario.gif)
 
-📹 **[Complete Demo Video Collection](https://drive.google.com/drive/folders/1-TDA9TRJ-gcsTLjjDPdYjRyHc5yL2MIe?usp=drive_link)**
+![Navigation Test Demo](demo/Batch_test_turtle_bot.mp4)
+
+📹 **[Complete Demo Video Collection](https://drive.google.com/drive/folders/1-TDA9TRJ-gcsTLjjDPdYjRyHc5yL2MIe?usp=sharing)**
 
 ## 🎯 Project Overview
 
@@ -79,18 +80,36 @@ nvidia-smi  # Should show GPU information
 chmod +x docker/build_docker.sh docker/run_docker.sh
 
 # Build the Docker image (includes ROS 2 Jazzy + TurtleBot4)
-# Note: First build may take 10-15 minutes to download dependencies
+# Note: First build may take few minutes to download dependencies
 ./docker/build_docker.sh
 ```
 
 ### 3. Run the Container
 
 ```bash
-# Start the container with GUI support
+# Start the container with GUI support (persistent by default)
 # Note: Ensure Docker has adequate resources allocated (8GB+ RAM, 4+ CPU cores)
 ./docker/run_docker.sh
+
+# For temporary containers that are removed after exit
+./docker/run_docker.sh --rm
+
+# Custom resource allocation
+./docker/run_docker.sh --memory 8g --cpus 4
 ```
 
+**Container Options:**
+- **Default**: Container persists after exit (can be restarted with `docker start ros2_nav2_container`)
+- **`--rm`**: Remove container automatically after exit (useful for clean testing)
+- **Resource flags**: `--memory`, `--cpus`, `--shm-size` for custom allocation
+- **GPU support**: Auto-detected, or use `--gpu true/false` to override
+
+**Troubleshooting GUI Issues:**
+```bash
+# If GUI applications don't display, enable X11 forwarding
+xhost +local:docker
+./docker/run_docker.sh
+```
 **Troubleshooting GUI Issues:**
 ```bash
 # If GUI applications don't display, enable X11 forwarding
@@ -137,7 +156,7 @@ You can run:
 
 📹 **See these examples in action**: [Demo Video Collection](https://drive.google.com/drive/folders/1-TDA9TRJ-gcsTLjjDPdYjRyHc5yL2MIe?usp=drive_link)
 
-### Basic Simulation Test
+###  Simulation Test
 Test if Gazebo and TurtleBot4 are working correctly:
 ```bash
 ros2 launch turtlebot4_gz_bringup turtlebot4_gz.launch.py 
@@ -185,9 +204,26 @@ ros2 launch nav2_performance_tests nav2_test_suite.launch.py start:="0.0,0.0" go
 **Notes**: 
 - First-time loading might take 30s-1min - be patient
 - If RViz doesn't load the map, close all instances and restart
-- - Check results: `ls reports/` and `cat reports/test_01_summary.yaml` (reports generated in current directory)
+- Check results: `ls reports/` and `cat reports/test_01_summary.yaml` (reports generated in current directory)
 
-## 🔬 Advanced Testing Scenarios
+## 🔬 Navigation Testing Scenarios
+
+### Important: Clean Environment Setup
+
+**Note**: If you are running the launch file multiple times or have closed and restarted sessions, it's recommended to ensure there are no leftover instances to avoid conflicts:
+
+```bash
+# Clean up any existing processes before starting new tests
+pkill -f rviz
+pkill -f gazebo  
+pkill -f ros2
+```
+
+**When to use cleanup:**
+- Between test sessions
+- After interrupted or failed launches
+- When seeing TF_OLD_DATA or RTPS_TRANSPORT_SHM errors
+- Before running different world environments
 
 ### Single Navigation Test
 
@@ -209,16 +245,6 @@ ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
     dist_thres:=0.15
 ```
 
-### Different World Environments
-
-```bash
-# Test in warehouse environment
-ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
-    world_name:=warehouse \
-    start:="1.0,1.0,0.0,0.0" goal:="8.0,5.0,0.0,1.57" \
-    test_name:=warehouse_test
-```
-
 ### Sequential Testing (Without Restarting Simulation)
 
 After running your initial test via the launch file, you can run additional tests using just the node without restarting the entire simulation environment:
@@ -237,37 +263,14 @@ ros2 run nav2_performance_tests Nav2TestNode --ros-args \
   -p test_name:=sequential_test_2
 ```
 
-## 📋 Parameter Configuration Options
-
-### Launch File Parameters
-
-All parameters can be passed via `ros2 launch`:
-
-| Parameter | Format | Example | Description |
-|-----------|--------|---------|-------------|
-| `start` | "x,y" or "x,y,z,yaw" | "1.0,2.0" or "1.0,2.0,0.0,1.57" | Start position |
-| `goal` | "x,y" or "x,y,z,yaw" | "4.0,3.0" or "4.0,3.0,0.0,0.0" | Goal position |
-| `start_x`, `start_y`, `start_z`, `start_yaw` | Individual floats | `start_x:=1.0` | Individual start coordinates |
-| `goal_x`, `goal_y`, `goal_z`, `goal_yaw` | Individual floats | `goal_x:=4.0` | Individual goal coordinates |
-| `dist_thres` | Float (meters) | `dist_thres:=0.30` | Success distance threshold |
-| `test_name` | String | `test_name:=my_test` | Custom test identifier |
-| `repetitions` | Integer | `repetitions:=5` | Number of test repetitions |
-| `world_name` | String | `world_name:=warehouse` | Gazebo world to use |
-| `entity_name` | String | `entity_name:=turtlebot4` | Robot name in Gazebo |
-| `test_file` | Path | `test_file:=config/tests.yaml` | Batch test configuration file |
-
-### Nav2TestNode Parameters
-
-When running the node directly with `ros2 run`:
+### Different World Environments
 
 ```bash
-ros2 run nav2_performance_tests Nav2TestNode --ros-args \
-  -p start_x:=1.0 \
-  -p start_y:=2.0 \
-  -p goal_x:=4.0 \
-  -p goal_y:=3.0 \
-  -p test_name:=direct_test \
-  -p repetitions:=3
+# Test in warehouse environment
+ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
+    world_name:=warehouse \
+    start:="1.0,1.0,0.0,0.0" goal:="8.0,5.0,0.0,1.57" \
+    test_name:=warehouse_test
 ```
 
 ## 🐢 Advanced Usage
@@ -318,6 +321,40 @@ tests:
     repetitions: 2
     dist_thres: 0.3
 ```
+## 📋 Parameter Configuration Options
+
+### Launch File Parameters
+
+All parameters can be passed via `ros2 launch`:
+
+| Parameter | Format | Example | Description |
+|-----------|--------|---------|-------------|
+| `start` | "x,y" or "x,y,z,yaw" | "1.0,2.0" or "1.0,2.0,0.0,1.57" | Start position |
+| `goal` | "x,y" or "x,y,z,yaw" | "4.0,3.0" or "4.0,3.0,0.0,0.0" | Goal position |
+| `start_x`, `start_y`, `start_z`, `start_yaw` | Individual floats | `start_x:=1.0` | Individual start coordinates |
+| `goal_x`, `goal_y`, `goal_z`, `goal_yaw` | Individual floats | `goal_x:=4.0` | Individual goal coordinates |
+| `dist_thres` | Float (meters) | `dist_thres:=0.30` | Success distance threshold |
+| `test_name` | String | `test_name:=my_test` | Custom test identifier |
+| `repetitions` | Integer | `repetitions:=5` | Number of test repetitions |
+| `world_name` | String | `world_name:=warehouse` | Gazebo world to use |
+| `entity_name` | String | `entity_name:=turtlebot4` | Robot name in Gazebo |
+| `test_file` | Path | `test_file:=config/tests.yaml` | Batch test configuration file |
+
+### Nav2TestNode Parameters
+
+When running the node directly with `ros2 run`:
+
+```bash
+ros2 run nav2_performance_tests Nav2TestNode --ros-args \
+  -p start_x:=1.0 \
+  -p start_y:=2.0 \
+  -p goal_x:=4.0 \
+  -p goal_y:=3.0 \
+  -p test_name:=direct_test \
+  -p repetitions:=3
+```
+
+
 
 ## 📊 Performance Metrics & Data Collection Strategy
 
@@ -520,25 +557,28 @@ The system can automatically detect the active Gazebo world or use specified wor
 
 ## 📁 Repository Structure
 
-```
 turtlebot4-navigation-testing/
 ├── Dockerfile                    # ROS 2 Jazzy + TurtleBot4 environment
 ├── demo/
 │   └── Simple_scnario.gif        # Navigation demonstration
 ├── docker/
 │   ├── build_docker.sh          # Docker build script  
-│   └── run_docker.sh            # Container launch script
+│   └── run_docker.sh            # Container launch script with dynamic resources
 ├── ros2_ws/
 │   └── src/nav2_performance_tests/
 │       ├── launch/
 │       │   └── nav2_test_suite.launch.py
 │       ├── nav2_performance_tests/
-│       │   ├── nav2_test_node.py
-│       │   └── amcl_pose_initializer.py
-│       └── setup.py
-├── reports/                     # Generated test reports (auto-created in working directory)
-└── README.md                    # This documentation
-```
+│       │   ├── __init__.py       # Package initialization
+│       │   ├── nav2_test_node.py # Main navigation test engine
+│       │   ├── navigation_test_error_handler.py # Error handling and troubleshooting
+│       │   └── amcl_pose_initializer.py # Robot pose initialization
+│       ├── setup.py              # Package configuration
+│       └── package.xml           # ROS package metadata
+├── config/                       # Configuration files (optional)
+│   └── example_batch_tests.yaml  # Sample batch test configuration
+├── reports/                      # Generated test reports (auto-created in working directory)
+└── README.md                     # This documentation
 
 ## 🎯 Challenge Requirements Fulfilled
 
@@ -593,7 +633,7 @@ tests:
 If you encounter issues:
 
 1. **Check the troubleshooting section** above for common solutions
-2. 2. **Review generated log files** in the reports directory (created in your current working directory)
+2. **Review generated log files** in the reports directory (created in your current working directory)  
 3. **Ensure Docker has sufficient resources** allocated (8GB+ RAM recommended)
 4. **Verify all prerequisites** are properly installed
 5. **Check container logs**: `docker logs ros2_nav2_container`

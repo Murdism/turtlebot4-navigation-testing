@@ -25,6 +25,12 @@ setup(
         'console_scripts': [
            'amcl_pose_initializer = nav2_performance_tests.amcl_pose_initializer:main',
            'Nav2TestNode = nav2_performance_tests.Nav2TestNode:main',
-        ],
+        ],       
     },
+
+    py_modules=[
+        'nav2_performance_tests.navigation_test_error_handler',
+        'nav2_performance_tests.Nav2TestNode',
+        'nav2_performance_tests.amcl_pose_initializer',
+    ],
 )

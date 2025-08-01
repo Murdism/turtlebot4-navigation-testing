@@ -29,7 +29,7 @@ class InitialPosePublisher(Node):
         self.declare_parameter('yaw', 0.0)
         self.declare_parameter('cov_thresh', 0.5)  # Covariance threshold for acceptance
 
-        self.max_attempts = 50
+        self.max_attempts = 100
         self.attempt = 0
         self.pose_accepted = False
         self.timed_out = False
