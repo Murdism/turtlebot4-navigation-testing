@@ -39,11 +39,18 @@ This project is an advanced automated testing solution for autonomous robot navi
 
 ## 🚀 Quick Start
 
+### 📹 See It In Action First
+Before diving into setup, check out the [live demonstration videos](https://drive.google.com/drive/folders/1-TDA9TRJ-gcsTLjjDPdYjRyHc5yL2MIe?usp=drive_link) showing the complete navigation testing suite in operation.
+
+*Featuring: Single navigation tests, multi-run analysis, batch testing, path efficiency analysis, and automated reporting*
+
 ### Prerequisites
 
 - **Docker** (with NVIDIA Container Toolkit for GPU support)
-- **Git**
-- At least 8GB RAM and 4 CPU cores recommended
+- **Network connection** - Required for downloading Gazebo worlds and ROS packages
+- **System Requirements**: At least 8GB RAM and 4 CPU cores recommended
+- **Display**: X11 forwarding capability for GUI applications (RViz, Gazebo)
+- **Performance**: Close unnecessary applications to ensure smooth simulation
 
 ### 1. Clone Repository
 
@@ -56,16 +63,22 @@ cd turtlebot4-navigation-testing
 
 #### Requirements for Docker with GPU Support
 ```bash
+# Install NVIDIA Container Toolkit for GPU acceleration
 sudo apt update
 sudo apt install -y nvidia-container-toolkit
 sudo systemctl restart docker
+
+# Verify GPU support (optional)
+nvidia-smi  # Should show GPU information
 ```
 
+#### Build the Container
 ```bash
 # Make scripts executable
 chmod +x docker/build_docker.sh docker/run_docker.sh
 
 # Build the Docker image (includes ROS 2 Jazzy + TurtleBot4)
+# Note: First build may take 10-15 minutes to download dependencies
 ./docker/build_docker.sh
 ```
 
@@ -73,6 +86,14 @@ chmod +x docker/build_docker.sh docker/run_docker.sh
 
 ```bash
 # Start the container with GUI support
+# Note: Ensure Docker has adequate resources allocated (8GB+ RAM, 4+ CPU cores)
+./docker/run_docker.sh
+```
+
+**Troubleshooting GUI Issues:**
+```bash
+# If GUI applications don't display, enable X11 forwarding
+xhost +local:docker
 ./docker/run_docker.sh
 ```
 
@@ -81,7 +102,7 @@ chmod +x docker/build_docker.sh docker/run_docker.sh
 To open additional terminals inside the running container:
 ```bash
 docker exec -it ros2_nav2_container bash
-# Inside the container
+# Inside the container, always source the workspace
 source install/setup.bash
 ```
 
@@ -89,7 +110,7 @@ source install/setup.bash
 
 Inside the container:
 ```bash
-colcon build --symlink-install
+colcon build 
 source install/setup.bash
 ```
 
@@ -97,9 +118,9 @@ source install/setup.bash
 
 ### Available Test Worlds
 
-- **depot** - Simple warehouse environment (default)
-- **warehouse** - Complex multi-room facility
-- **maze** - Challenging maze navigation
+- **depot** - Simple warehouse environment (default, fastest loading)
+- **warehouse** - Complex multi-room facility with obstacles
+- **maze** - Challenging maze navigation for advanced testing
 
 ### 🔺 Available Navigation Options
 
@@ -113,13 +134,32 @@ You can run:
 
 ## 🎮 Basic Testing Examples
 
+📹 **See these examples in action**: [Demo Video Collection](https://drive.google.com/drive/folders/1-TDA9TRJ-gcsTLjjDPdYjRyHc5yL2MIe?usp=drive_link)
+
 ### Basic Simulation Test
 Test if Gazebo and TurtleBot4 are working correctly:
 ```bash
 ros2 launch turtlebot4_gz_bringup turtlebot4_gz.launch.py 
 ```
 
-**Note**: Before moving the robot, go to Gazebo, select the robot, and click "undock"
+**Important Setup Notes:**
+- **Before moving the robot**: Go to Gazebo, select the robot, and click "undock"
+- **First Launch**: Initial startup may take 30s-1min as Gazebo downloads world assets
+- **Network Issues**: If Gazebo shows "Requesting list of worlds" or loads very slowly, check your internet connection as it downloads world files on first run
+
+**Troubleshooting First Launch:**
+```bash
+# If Gazebo hangs on world loading
+# 1. Check network connectivity
+ping gazebosim.org
+
+# 2. Monitor download progress
+docker logs ros2_nav2_container
+
+# 3. If needed, restart with fresh container
+docker stop ros2_nav2_container
+./docker/run_docker.sh
+```
 
 ### Manual Robot Control
 For manual testing and verification:
@@ -137,14 +177,64 @@ For automated navigation testing using available maps (AMCL for localization):
 
 ```bash
 source install/setup.bash
-# Basic navigation test (depot world: 1,3 → 8,7)
-ros2 launch nav2_performance_tests nav2_test_suite.launch.py start:="0.0,0.0" goal:="8.0,7.0"  repetitions:=2 dist_thres:=0.25
+# Basic navigation test (depot world: 0,0 → 8,7)
+ros2 launch nav2_performance_tests nav2_test_suite.launch.py start:="0.0,0.0" goal:="8.0,7.0" repetitions:=2 dist_thres:=0.25
 ```
 
 **Notes**: 
-- First-time loading might take 30s-1min - be patient
+- First-time loading might take 1min or more - be patient
 - If RViz doesn't load the map, close all instances and restart
 - Check results: `ls reports/` and `cat reports/test_01_summary.yaml`
+
+## 🔬 Advanced Testing Scenarios
+
+### Single Navigation Test
+
+```bash
+# Simple point-to-point navigation
+ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
+    start:="0.0,0.0" goal:="4.0,3.0" \
+    test_name:=basic_nav_test
+```
+
+### Multi-Run Performance Testing
+
+```bash
+# Run 5 iterations for statistical analysis
+ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
+    start:="0.5,0.5" goal:="4.5,3.5" \
+    repetitions:=5 \
+    test_name:=performance_analysis \
+    dist_thres:=0.15
+```
+
+### Different World Environments
+
+```bash
+# Test in warehouse environment
+ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
+    world_name:=warehouse \
+    start:="1.0,1.0,0.0,0.0" goal:="8.0,5.0,0.0,1.57" \
+    test_name:=warehouse_test
+```
+
+### Sequential Testing (Without Restarting Simulation)
+
+After your initial test is running, open a new terminal and run additional tests:
+
+```bash
+# Open new container terminal
+docker exec -it ros2_nav2_container bash
+source install/setup.bash
+
+# Run another test without restarting simulation
+ros2 run nav2_performance_tests Nav2TestNode --ros-args \
+  -p start_x:=2.0 \
+  -p start_y:=1.0 \
+  -p goal_x:=6.0 \
+  -p goal_y:=4.0 \
+  -p test_name:=sequential_test_2
+```
 
 ## 📋 Parameter Configuration Options
 
@@ -227,6 +317,54 @@ ros2 run nav2_performance_tests Nav2TestNode --ros-args \
   -p goal_x:=6.0 \
   -p goal_y:=4.0 \
   -p test_name:=sequential_test_2
+```
+## 🚀 Advanced Usage
+
+### Batch Testing
+Create custom test configurations with multiple navigation scenarios:
+
+```bash
+# Example: Run comprehensive warehouse testing
+ros2 launch nav2_performance_tests       nav2_test_suite.launch.py \
+world_name:=warehouse \
+test_file:=config/warehouse_test_suite.yaml
+```
+
+### Custom Test Configuration Files
+Create YAML files for complex test suites:
+
+```yaml
+# Example: config/warehouse_tests.yaml
+world_name: "warehouse"
+nav2: true
+rviz: true
+slam: false
+localization: true
+
+tests:
+  - test_name: "warehouse_corner_to_center"
+    start_x: 8.0
+    start_y: 7.0
+    start_z: 0.0
+    start_yaw: 0.0
+    goal_x: 1.0
+    goal_y: 1.0
+    goal_z: 0.0
+    goal_yaw: 1.57
+    repetitions: 1
+    dist_thres: 0.3
+
+  - test_name: "warehouse_center_to_corner"
+    start_x: 1.0
+    start_y: 1.0
+    start_z: 0.0
+    start_yaw: 1.57
+    goal_x: 8.0    
+    goal_y: 7.0
+    goal_z: 0.0
+    goal_yaw: 0.0
+    repetitions: 2
+    dist_thres: 0.3
 ```
 
 ## 📊 Performance Metrics & Data Collection Strategy
@@ -433,6 +571,8 @@ The system can automatically detect the active Gazebo world or use specified wor
 ```
 turtlebot4-navigation-testing/
 ├── Dockerfile                    # ROS 2 Jazzy + TurtleBot4 environment
+├── demo/
+│   └── Simple_scnario.gif        # Navigation demonstration
 ├── docker/
 │   ├── build_docker.sh          # Docker build script  
 │   └── run_docker.sh            # Container launch script
@@ -458,40 +598,9 @@ turtlebot4-navigation-testing/
 ✅ **Comprehensive Reports** - YAML reports with planned vs actual paths  
 ✅ **Path Visualization Data** - Complete trajectory data for analysis  
 
-## 🚀 Advanced Usage
+### 📹 Live Proof of Implementation
+All features demonstrated in action: **[Video Collection](https://drive.google.com/drive/folders/1-TDA9TRJ-gcsTLjjDPdYjRyHc5yL2MIe?usp=drive_link)**
 
-### Batch Testing
-Create custom test configurations with multiple navigation scenarios:
-
-```bash
-# Example: Run comprehensive warehouse testing
-ros2 launch nav2_performance_tests nav2_test_suite.launch.py \
-    world_name:=warehouse \
-    test_file:=config/warehouse_test_suite.yaml
-```
-
-### Custom Test Configuration Files
-Create YAML files for complex test suites:
-
-```yaml
-# Example: config/warehouse_tests.yaml
-world_name: warehouse
-entity_name: turtlebot4
-tests:
-  - test_name: "short_path"
-    start_x: 1.0
-    start_y: 1.0
-    goal_x: 3.0
-    goal_y: 2.0
-    repetitions: 3
-  - test_name: "long_path"
-    start_x: 0.0
-    start_y: 0.0
-    goal_x: 8.0
-    goal_y: 6.0
-    repetitions: 5
-    dist_thres: 0.2
-```
 
 ## 📞 Support
 
