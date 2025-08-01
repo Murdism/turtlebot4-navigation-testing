@@ -47,7 +47,7 @@ This project is an advanced automated testing solution for autonomous robot navi
 ## 🐢 Quick Start
 
 ### 📹 See It In Action First
-Before diving into setup, check out our [live demonstration videos](https://drive.google.com/drive/folders/1-TDA9TRJ-gcsTLjjDPdYjRyHc5yL2MIe?usp=drive_link) showing the complete navigation testing suite in operation.
+Before diving into setup, check out the [live demonstration videos](https://drive.google.com/drive/folders/1-TDA9TRJ-gcsTLjjDPdYjRyHc5yL2MIe?usp=drive_link) showing the complete navigation testing suite in operation.
 
 *Featuring: Single navigation tests, multi-run analysis, batch testing, path efficiency analysis, and automated reporting*
 
