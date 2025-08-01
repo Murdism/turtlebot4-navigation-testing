@@ -5,7 +5,7 @@
 
 **Turtle Bot Batch Testing**
 
-[![Watch TurtleBot4 Navigation Demo](https://img.shields.io/badge/🎥_Watch_Demo-Live_on_Portfolio-blue?style=for-the-badge)](https://murdism.github.io/#projects)
+<video controls src="https://murdism.github.io/resume/assets/Batch_test_turtle_bot_shorter.mp4" title="[![Watch TurtleBot4 Navigation Demo](https://img.shields.io/badge/🎥_Watch_Demo-Live_on_Portfolio-blue?style=for-the-badge)](https://murdism.github.io/resume/assets/Batch_test_turtle_bot_shorter.mp4)"></video>
 
 📹 **[Complete Demo Video Collection](https://drive.google.com/drive/folders/1-TDA9TRJ-gcsTLjjDPdYjRyHc5yL2MIe?usp=sharing)**
 
