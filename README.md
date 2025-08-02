@@ -561,7 +561,7 @@ ros2 node info /Nav2TestNode
 The system can automatically detect the active Gazebo world or use specified world parameters, enabling seamless integration with existing simulation environments.
 
 ## 📁 Repository Structure
-
+```
 turtlebot4-navigation-testing/
 ├── Dockerfile                    # ROS 2 Jazzy + TurtleBot4 environment
 ├── demo/
@@ -584,7 +584,7 @@ turtlebot4-navigation-testing/
 │   └── example_batch_tests.yaml  # Sample batch test configuration
 ├── reports/                      # Generated test reports (auto-created in working directory)
 └── README.md                     # This documentation
-
+```
 ## 🎯 Challenge Requirements Fulfilled
 
 ✅ **Dockerfile with ROS 2 Jazzy** - Complete development environment on Ubuntu 24.04  
