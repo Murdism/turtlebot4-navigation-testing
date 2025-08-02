@@ -563,27 +563,27 @@ The system can automatically detect the active Gazebo world or use specified wor
 ## 📁 Repository Structure
 ```
 turtlebot4-navigation-testing/
-├── Dockerfile                    # ROS 2 Jazzy + TurtleBot4 environment
+├── Dockerfile                                    # ROS 2 Jazzy + TurtleBot4 environment
 ├── demo/
-│   └── Simple_scnario.gif        # Navigation demonstration
+│   └── Simple_scnario.gif                        # Navigation demonstration
 ├── docker/
-│   ├── build_docker.sh          # Docker build script  
-│   └── run_docker.sh            # Container launch script with dynamic resources
+│   ├── build_docker.sh                           # Docker build script  
+│   └── run_docker.sh                             # Container launch script with dynamic resources
 ├── ros2_ws/
-│   └── src/nav2_performance_tests/
-│       ├── launch/
-│       │   └── nav2_test_suite.launch.py
-│       ├── nav2_performance_tests/
-│       │   ├── __init__.py              # Package initialization
-│       │   ├── nav2_test_node.py        # Main navigation test engine
-│       │   ├── navigation_test_error_handler.py # Error handling and troubleshooting
-│       │   └── amcl_pose_initializer.py # Robot pose initialization
-│       ├── setup.py                     # Package configuration
-│       └── package.xml                  # ROS package metadata
-├── config/                              # Configuration files (optional)
-│   └── example_batch_tests.yaml         # Sample batch test configuration
-├── reports/                             # Generated test reports (auto-created in working directory)
-└── README.md                            # This documentation
+│   ├── src/nav2_performance_tests/
+│   │   ├── launch/
+│   │   │   └── nav2_test_suite.launch.py
+│   │   ├── nav2_performance_tests/    
+│   │   │   ├── __init__.py                      # Package initialization
+│   │   │   ├── nav2_test_node.py                # Main navigation test engine
+│   │   │   ├── navigation_test_error_handler.py # Error handling and troubleshooting
+│   │   │   └── amcl_pose_initializer.py         # Robot pose initialization
+│   │   ├── setup.py                             # Package configuration
+│   │   └── package.xml                          # ROS package metadata
+|   └──config/                                   # Configuration files (optional)
+│       └── warehouse_test_suite.yaml            # Sample batch test configuration
+├── reports/                                     # Generated test reports (auto-created in working directory)
+└── README.md                                    # This documentation
 ```
 ## 🎯 Challenge Requirements Fulfilled
 
